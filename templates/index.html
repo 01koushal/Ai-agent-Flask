@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AI DB Agent</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f8; }
+        .container {
+            width: 420px;
+            margin: 50px auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .chat {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .user { text-align: right; color: blue; margin: 5px 0; }
+        .bot { text-align: left; color: green; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h3>AI DB Agent 🤖</h3>
+    <div class="chat" id="chat"></div>
+
+    <input id="q" placeholder="Ask a question..." style="width:75%">
+    <button onclick="send()">Send</button>
+</div>
+
+<script>
+async function send() {
+    const input = document.getElementById("q");
+    const question = input.value.trim();
+    if (!question) return;
+
+    add(question, "user");
+    input.value = "";
+
+    const res = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ question })
+    });
+
+    const data = await res.json();
+    add(JSON.stringify(data.answer, null, 2), "bot");
+}
+
+function add(text, cls) {
+    const div = document.createElement("div");
+    div.className = cls;
+    div.textContent = text;
+    document.getElementById("chat").appendChild(div);
+    document.getElementById("chat").scrollTop =
+        document.getElementById("chat").scrollHeight;
+}
+</script>
+
+</body>
+</html>
