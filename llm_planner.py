@@ -3,7 +3,7 @@ from google import genai
 
 # ⚠️ HARD-CODED API KEY (FOR LOCAL TESTING ONLY)
 client = genai.Client(
-    api_key="AIzaSyBfmV2Gs10cE_VQV_6x-3Uf1iiBE1INSjs"
+    api_key="AIzaSyDPGF_FYppP_Z5Szgrktk4hMuEjhIOvoro"
 )
 
 MODEL_NAME = "models/gemini-flash-latest"  # ✅ THIS IS THE KEY FIX
@@ -41,6 +41,21 @@ JSON FORMAT:
   "filter": {},
   "limit": 10
 }
+SPECIAL AGGREGATION RULE:
+
+If the user asks:
+- "from which locations patients are more"
+- "location wise patient count"
+- "patients grouped by city"
+- "which hospital location has more patients"
+
+Then OUTPUT ONLY this JSON:
+
+{
+  "operation": "group_count",
+  "group_by": "hospital_location"
+}
+
 
 """
 
