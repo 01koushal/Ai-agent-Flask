@@ -36,6 +36,9 @@ def ask_agent(question: str):
         # ---- Execute ----
         result = execute(safe_plan)
         op = safe_plan["operation"]
+        if op == "group_count":
+            return result
+
 
         if op == "count":
             if result == 0:
