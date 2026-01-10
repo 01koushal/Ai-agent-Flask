@@ -8,17 +8,32 @@ ALLOWED_FIELDS = {
     "chronic_conditions"
 }
 
-ALLOWED_OPERATIONS = {"count", "find_one", "find_many"}
+ALLOWED_OPERATIONS = {
+    "count",
+    "find_one",
+    "find_many",
+    "group_count"
+}
+
 
 def validate_plan(plan: dict):
-    if plan["operation"] not in ALLOWED_OPERATIONS:
+    op = plan.get("operation")
+
+    if op not in ALLOWED_OPERATIONS:
         raise ValueError("Invalid operation")
 
+    # validate filters
     for field in plan.get("filter", {}):
         if field not in ALLOWED_FIELDS:
             raise ValueError(f"Unsafe field: {field}")
 
-    if plan["operation"] == "find_many":
+    # validate aggregation
+    if op == "group_count":
+        if plan.get("group_by") != "hospital_location":
+            raise ValueError("Unsafe group_by field")
+
+    if op == "find_many":
         plan["limit"] = min(plan.get("limit", 10), 10)
 
     return plan
+
