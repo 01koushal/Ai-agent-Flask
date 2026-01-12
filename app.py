@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify
 from llm_planner import generate_plan
 from validator import validate_plan
 from executor import execute
+from intent_classifier import classify_intent
 
 import re
 import traceback
@@ -12,7 +13,32 @@ app = Flask(__name__)
 
 def ask_agent(question: str):
     try:
-        # ---- Direct patient lookup (non-tech friendly) ----
+        q = question.lower().strip()
+        if q in ["hi", "hello", "hey", "hii", "hlo"]:
+            return "Hello 👋 How can I help you with patient data today?"
+        if q in ["thanks", "thank you", "thx"]:
+            return "You're welcome 😊"
+
+        # ---------- AI INTENT CLASSIFICATION ----------
+        intent = classify_intent(question)
+
+        # ⛔ STOP HERE FOR NON-DATA INTENTS
+        if intent == "GREETING":
+            return "Hello 👋 How can I help you with patient data today?"
+
+        if intent == "THANKS":
+            return "You're welcome 😊"
+
+        if intent == "HELP":
+            return (
+                "You can ask things like:\n"
+                "- How many patients are there?\n"
+                "- Female patients from Hyderabad\n"
+                "- Patient P000123\n"
+                "- Location wise patient count"
+            )
+
+        # ---------- DIRECT PATIENT ID LOOKUP ----------
         match = re.search(r'patient\s+(p?\d+)', question, re.IGNORECASE)
         if match:
             from db import collection
@@ -22,47 +48,49 @@ def ask_agent(question: str):
                 pid = "P" + pid.zfill(6)
 
             patient = collection.find_one({"patient_id": pid}, {"_id": 0})
-            if patient:
-                return patient
-            else:
-                return "No patient found with that ID."
+            return patient or "No patient found with that ID."
 
-        # ---- LLM → plan ----
+        # ---------- LLM → QUERY PLAN ----------
         plan = generate_plan(question)
+        if plan.get("error") == "LLM_UNAVAILABLE":
+            return (
+                "The AI service is currently busy 😓\n"
+                "Please try again in a few seconds."
+            )
+        if plan.get("use_db") is False:
+            return plan.get("answer")
+        plan.pop("use_db", None)
 
-        # ---- Validate plan ----
         safe_plan = validate_plan(plan)
-
-        # ---- Execute ----
         result = execute(safe_plan)
+
         op = safe_plan["operation"]
+
         if op == "group_count":
             return result
 
-
         if op == "count":
-            if result == 0:
-                return "No matching patients were found."
-            return f"Total patients found: {result}"
+            return (
+                "No matching patients were found."
+                if result == 0
+                else f"Total patients found: {result}"
+            )
 
         if op == "find_one":
             return result or "No matching patient found."
 
         if op == "find_many":
-            if not result:
-                return "No matching patients were found."
-            return {
-                "count": len(result),
-                "patients": result
-            }
+            return (
+                "No matching patients were found."
+                if not result
+                else {"count": len(result), "patients": result}
+            )
 
         return "I couldn’t understand the request clearly."
 
     except Exception:
-        print("\n❌ INTERNAL ERROR:")
         traceback.print_exc()
         return "Sorry, I couldn’t process that request. Please try rephrasing."
-
 
 # ---------------- FLASK ROUTES ----------------
 
