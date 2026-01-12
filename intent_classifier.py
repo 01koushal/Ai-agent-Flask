@@ -2,7 +2,7 @@ import json
 from google import genai
 
 client = genai.Client(
-    api_key="AIzaSyBZL0D9sjtilZsjK37RYhRCcbKa1nquIP4"
+    api_key="AIzaSyDBlre8Jfd8g7mPIrxvCJG-MBLl9fSbW2Y"
 )
 
 MODEL = "models/gemini-flash-latest"
@@ -41,4 +41,5 @@ def classify_intent(message: str) -> str:
         return data.get("intent", "OTHER")
     except Exception:
         return "OTHER"
+
 
