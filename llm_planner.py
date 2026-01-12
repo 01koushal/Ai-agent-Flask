@@ -1,9 +1,8 @@
 import json
 from google import genai
 
-# ⚠️ HARD-CODED API KEY (FOR LOCAL TESTING ONLY)
 client = genai.Client(
-    api_key="AIzaSyDDjSg9fvoZY6TCnBN2QPDhLU-jkaSyKmg"
+    api_key="AIzaSyBZL0D9sjtilZsjK37RYhRCcbKa1nquIP4"
 )
 
 MODEL_NAME = "models/gemini-flash-latest"  # ✅ THIS IS THE KEY FIX
@@ -93,3 +92,4 @@ def generate_plan(question: str) -> dict:
             "error": "LLM_UNAVAILABLE",
             "message": str(e)
         }
+
